@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=@_ARG_TARGET_NAME@
+GenericName=@_ARG_PROJECT_NAME@.@_ARG_TARGET_NAME@
+Comment=@CMAKE_PROJECT_DESCRIPTION@
+Exec=@_EXECUTABLE_NAME@
+Icon=@_ARG_TARGET_NAME@_icon
+Type=Application
+Categories=Miscellaneous;

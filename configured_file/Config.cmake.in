@@ -1,0 +1,41 @@
+@PACKAGE_INIT@.
+
+include(CMakeFindDependencyMacro)
+set(@_ARG_TARGET_NAME@_DIR "@CMAKE_INSTALL_PREFIX@")
+
+# Find dependencies for static build
+if (@_CONFIG_STATIC_BUILD@)
+  string(REGEX MATCHALL "[^;]+" _dependencies_args "@_CONFIG_FIND_DEPENDENCY_ARGS@")
+  foreach(_dependency ${_dependencies_args})
+    string(REPLACE " " ";" _dep_args "${_dependency}")
+    list(GET _dep_args 0 _dep_name)
+    list(GET _dep_args 1 _dep_version)
+    list(GET _dep_args 2 _dep_options)
+    message(STATUS "Package '@_ARG_TARGET_NAME@' depends on package '${_dep_name} ${_dep_version}'")
+    find_dependency(${_dep_args})
+    set(_dep_version_name ${_dep_name}_VERSION)
+    if(${_dep_name}_FOUND) 
+      if(${_dep_version_name} VERSION_LESS ${_dep_version})
+        message(WARNING "Found package '${_dep_name}', but the current version(${${_dep_version_name}}) is less than expected(${_dep_version})")
+      elseif(${_dep_version_name} VERSION_GREATER ${_dep_version})
+        message(STATUS "Found package '${_dep_name}', version(${${_dep_version_name}}) > expected(${_dep_version})")
+      else()
+        message(STATUS "Found package '${_dep_name}', version == ${${_dep_version_name}}")
+      endif()
+    else() 
+      string(TOUPPER "${_dep_options}" _upper_dep_options)
+      if ("${_upper_dep_options}" MATCHES ".*${REQUIRED}.*") 
+        message(FATAL "Package '${_dep_name}' not found, which is MUST required by package '@_ARG_TARGET_NAME@'")
+      else()
+        message(WARNING "Package '${_dep_name}' not found, which is optional to package '@_ARG_TARGET_NAME@'")   
+      endif()
+    endif()
+  endforeach()
+  unset(_dependencies_args) 
+  unset(_dependency)
+  unset(_dep_args)
+endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/@_ARG_TARGET_NAME@Targets.cmake")
+
+

@@ -1,0 +1,9 @@
+%PROJECT_NAME% documentation
+==================
+version %PROJECT_VERSION% 
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+   api/library_root

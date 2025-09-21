@@ -1,0 +1,42 @@
+#include <winver.h>
+
+APP_ICON1 ICON DISCARDABLE "@_ARG_ICON@"
+
+#ifndef DEBUG
+#define VER_DEBUG                   0
+#else
+#define VER_DEBUG                   VS_FF_DEBUG
+#endif
+
+#ifndef VS_VERSION_INFO
+  #define VS_VERSION_INFO 1
+#endif
+
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION     @_RC_PRODUCT_VERSION_STR@
+PRODUCTVERSION  @_RC_PROJECT_VERSION_STR@
+FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
+FILEFLAGS       (VS_FF_PRERELEASE|VER_DEBUG)
+FILEOS          VOS_NT
+FILETYPE        VFT_APP
+FILESUBTYPE     VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904E4"
+        BEGIN
+            VALUE "CompanyName",      "@SC_PROJECT_COMPANY@"
+            VALUE "FileDescription",  "@PROJECT_DESCRIPTION@"
+            VALUE "FileVersion",      "@PROJECT_VERSION@"
+            VALUE "LegalCopyright",   "@SC_PROJECT_COPYRIGHT@"
+            VALUE "ProductName",      "@_ARG_PROJECT_NAME@"
+            VALUE "ProductVersion",   "@CMAKE_PROJECT_VERSION@"
+            VALUE "Comments",         "@SC_PROJECT_DESCRIPTION@"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252
+    END    
+END

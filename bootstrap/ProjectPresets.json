@@ -1,0 +1,27 @@
+{
+    "version": 5,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 21,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "conf-project",
+            "hidden": true,
+            "cacheVariables" : {
+                "SC_PROJECT_NAME" : "sample",
+                "SC_PROJECT_DESCRIPTION" : "A sample for your C++ CMake development environment.",
+                "SC_PROJECT_VERSION" : "1.0.0.0",
+                "SC_PROJECT_NAMESPACE" : "sample.project",
+                "SC_PROJECT_LANGUAGES" : "C;CXX",
+                "SC_PROJECT_LOCALES" : "en;zh-CN",
+                "SC_PROJECT_LINK" : "www.sample.com",
+                "SC_PROJECT_EMAIL" : "me@sample.com",
+                "SC_PROJECT_AUTHOR" : "Your Name",
+                "SC_PROJECT_COMPANY" : "Your Company",
+                "SC_PROJECT_COPYRIGHT" : "(c) 2025 Your CopyRight"
+            }
+        }
+    ]
+}
