@@ -14,35 +14,6 @@ including dependency management, configuration file generation, and platform-spe
 
 
 
-#[[
-@brief Retrieves the CMake target name associated with a given package name added by sc_add_project_dependency()
-@param arg_pkg_prefix The name of the package to look up.
-@param arg_out_target The variable to store the resulting target name (set in parent scope).
-]]
-function(sc_get_target_name arg_pkg_prefix arg_out_target)
-  set(_target_name "Z_SC_PKG_${arg_pkg_prefix}_TARGET")
-  if (NOT DEFINED ${_target_name})
-    message(VERBOSE "Package ${arg_pkg_prefix} is not found in the project dependencies. It could not been added using add_project_dependency() before calling this function.")
-    set(${arg_out_target} ${arg_pkg_prefix} PARENT_SCOPE)
-    return()
-  endif()
-  set(_pkg_target "${Z_SC_PKG_${arg_pkg_prefix}_TARGET}")
-  set(${arg_out_target} ${_pkg_target} PARENT_SCOPE)
-endfunction()
-
-
-function(sc_normalize_include_dirs IN_DIRS OUT_DIRS)
-  set(_inc_dirs "")
-  foreach(_inc ${IN_DIRS})
-    # make include absolute
-    if (NOT IS_ABSOLUTE ${_inc}) 
-      set(_absolute_inc "${CMAKE_SOURCE_DIR}/${_inc}")
-    endif()
-    list(APPEND _inc_dirs ${_absolute_inc})
-  endforeach()
-  set(${OUT_DIRS} "${_inc_dirs}" PARENT_SCOPE)
-endfunction()  
-
 function(sc_remove_first_substring MY_STRING SEARCH_STRING RESULT_STRING)
   # Check if the substring exists in the string
   string(FIND "${MY_STRING}" "${SEARCH_STRING}" START_INDEX)
@@ -61,6 +32,24 @@ function(sc_remove_first_substring MY_STRING SEARCH_STRING RESULT_STRING)
   set(${RESULT_STRING} "${_result_string}" PARENT_SCOPE)
 endfunction()
 
+#[[
+@brief Retrieves the CMake target name associated with a given package name added by sc_add_project_dependency()
+@param arg_pkg_name The name of the package to look up.
+@param arg_out_target The variable to store the resulting target name (set in parent scope).
+]]
+function(sc_get_targets arg_pkg_name arg_out_targets)
+  set(_ref_targets "Z_SC_PKG_${arg_pkg_name}_TARGETS")
+  #message("##########sc_get_targets ${_ref_targets} : ${${_ref_targets}}")
+  if ((NOT ${_ref_targets}) OR (${_ref_targets} STREQUAL ""))
+    message(VERBOSE "Package ${arg_pkg_name} is not found in the project dependencies. It could not been added using add_project_dependency() before calling this function.")
+    list(APPEND _targets ${arg_pkg_name})
+    #message("##########sc_get_targets ${_ref_targets} is not defined, use ${_targets} instead")
+    set(${arg_out_targets} ${_targets} PARENT_SCOPE)
+    return()
+  endif()
+  list(APPEND _targets "${${_ref_targets}}")
+  set(${arg_out_targets} ${_targets} PARENT_SCOPE)
+endfunction()
 
 #[[
 @brief 
@@ -86,10 +75,14 @@ function(sc_collect_targets ARG_DEPENDENCIES ARG_OUT_TARGETS)
   set(_link_targets "")
   set(_arg_dependencies ${${ARG_DEPENDENCIES}})
   foreach(_pkg_name ${_arg_dependencies})
-    sc_get_target_name(${_pkg_name} _link_target_name)
-    # target name can be a list of targets separated by space, so we need to convert it to a list, which is separated by semicolon in CMake.
-    string(REPLACE " " ";" _link_target_name_1 "${_link_target_name}")
-    list(APPEND _link_targets ${_link_target_name_1})
+    sc_get_targets(${_pkg_name} _pkg_targets)
+    foreach(_pkg_target ${_pkg_targets})
+      #message("########### sc_collect_targets: ${_pkg_target} for package ${_pkg_name}")
+      if (NOT TARGET ${_pkg_target})
+        message(VERBOSE "`${_pkg_target}` is not currently a target. Unless `${_pkg_target}` will be added later, this may cause the build to fail.")
+      endif()
+      list(APPEND _link_targets ${_pkg_target})
+    endforeach()  
   endforeach()
   set(${ARG_OUT_TARGETS} ${_link_targets} PARENT_SCOPE)
 endfunction()
@@ -172,11 +165,13 @@ function(sc_install_project)
 
   set(_ref_export_targets "Z_SC_${_ARG_PROJECT_NAME}_EXPORT_TARGETS")
   if (DEFINED ${_ref_export_targets})
+    list(REMOVE_DUPLICATES ${_ref_export_targets})
     install(TARGETS ${${_ref_export_targets}} 
       EXPORT ${_ARG_PROJECT_NAME}Targets DESTINATION lib
       RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT bin    
     )
 
+    # install the configuration targets
     # install the configuration targets
     install(EXPORT ${_ARG_PROJECT_NAME}Targets
       FILE ${_ARG_PROJECT_NAME}Targets.cmake
@@ -259,6 +254,7 @@ function(sc_install_library)
     INTERFACE_INCLUDE_DIRS # The interface include directories of the target, these directories will be used by the target that links to this target
     PUBLIC_INCLUDE_DIRS # The public include directories of the target, these directories will be used by the target that links to this target
     PRIVATE_INCLUDE_DIRS # The private include directories of the target, these directories will be used only by this target
+    INSTALLED_INCLUDE_DIRS # The header directories to be installed, these directories will be installed to ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME} 
    )
 
   cmake_parse_arguments(
@@ -316,18 +312,6 @@ function(sc_install_library)
   # *****************************************
   # Install the public header files
   # *****************************************
-  if (DEFINED _ARG_INTERFACE_INCLUDE_DIRS)
-    sc_normalize_include_dirs(${_ARG_INTERFACE_INCLUDE_DIRS} _ARG_INTERFACE_INCLUDE_DIRS)
-  endif()  
-
-  if (DEFINED _ARG_PUBLIC_INCLUDE_DIRS)
-    sc_normalize_include_dirs(${_ARG_PUBLIC_INCLUDE_DIRS} _ARG_PUBLIC_INCLUDE_DIRS)
-  endif()
-
-  if (DEFINED _ARG_PRIVATE_INCLUDE_DIRS)
-    sc_normalize_include_dirs(${_ARG_PRIVATE_INCLUDE_DIRS} _ARG_PRIVATE_INCLUDE_DIRS)
-  endif()
-
   target_include_directories(${_ARG_TARGET_NAME}
     PRIVATE 
       $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
@@ -336,43 +320,21 @@ function(sc_install_library)
   )
 
   target_include_directories(${_ARG_TARGET_NAME} 
-    SYSTEM PRIVATE 
+    INTERFACE
+      ${_ARG_INTERFACE_INCLUDE_DIRS}
+    PUBLIC
+      ${_ARG_PUBLIC_INCLUDE_DIRS}
+    PRIVATE 
       $<BUILD_INTERFACE:${_CONFIGURED_INCLUDE_INSTALL_DIR}>
   )
 
-  set(_source_include_dirs ${CMAKE_CURRENT_SOURCE_DIR}/include)
-  foreach(_inc ${_ARG_PUBLIC_INCLUDE_DIRS})
-      if ((_inc MATCHES "^\\$\\<BUILD_INTERFACE:") OR (_inc MATCHES "^\\$\\<INSTALL_INTERFACE:")) 
-          target_include_directories(${_ARG_TARGET_NAME} 
-              PUBLIC 
-              ${_inc})
+  foreach(_inc ${_ARG_INSTALLED_INCLUDE_DIRS})
+      if (IS_ABSOLUTE ${_inc})
+        install(DIRECTORY ${_inc} DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${_ARG_PROJECT_NAME}")
       else()
-          sc_remove_first_substring(${_inc} ${_source_include_dirs} _inc_short)
-          target_include_directories(${_ARG_TARGET_NAME} 
-              PUBLIC 
-              $<BUILD_INTERFACE:${_inc}> 
-              $<INSTALL_INTERFACE:include/${_inc_short}>)
-          get_filename_component(_parent_inc ${_inc} DIRECTORY)
-          install(DIRECTORY ${_inc} DESTINATION "${_parent_inc}")
+        install(DIRECTORY ${CMAKE_SOURCE_DIR}/${_inc} DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${_ARG_PROJECT_NAME}")
       endif()
-  endforeach()
-
-  foreach(_inc ${_ARG_INTERFACE_INCLUDE_DIRS})
-      if ((_inc MATCHES "^\\$\\<BUILD_INTERFACE:") OR (_inc MATCHES "^\\$\\<INSTALL_INTERFACE:")) 
-          target_include_directories(${_ARG_TARGET_NAME} 
-              INTERFACE
-              ${_inc})
-      else()
-          sc_remove_first_substring(${_inc} ${_source_include_dirs} _inc_short)
-          target_include_directories(${_ARG_TARGET_NAME} 
-              INTERFACE 
-              $<BUILD_INTERFACE:${_inc}> 
-              $<INSTALL_INTERFACE:include/${_inc_short}>)
-          get_filename_component(_parent_inc ${_inc} DIRECTORY)
-          install(DIRECTORY ${_inc} DESTINATION "${_parent_inc}")
-      endif()
-  endforeach()
-
+  endforeach()    
 
   sc_collect_targets(_ARG_INTERFACE_DEPENDENCIES _interface_link_targets)
   sc_collect_targets(_ARG_PUBLIC_DEPENDENCIES _public_link_targets)
@@ -400,7 +362,11 @@ function(sc_install_library)
   set(_config_find_dependencies "")
 
   if (_ARG_LINK_TYPE STREQUAL "STATIC") 
-    list(APPEND _all_dependencies ${_ARG_INTERFACE_DEPENDENCIES} ${_ARG_PUBLIC_DEPENDENCIES} ${_ARG_PRIVATE_DEPENDENCIES} )
+    list(APPEND _all_dependencies 
+        ${_ARG_INTERFACE_DEPENDENCIES} 
+        ${_ARG_PUBLIC_DEPENDENCIES} 
+        # ${_ARG_PRIVATE_DEPENDENCIES} # dont include private dependencies for static library
+    )
     foreach(_dep ${_all_dependencies}) 
       set(_dep_version "${Z_SC_PKG_${_dep}_VERSION}")
       set(_dep_options "${Z_SC_PKG_${_dep}_OPTIONS}")
@@ -426,7 +392,12 @@ function(sc_install_library)
   include(${SIDECMAKE_DIR}/SCFindPackage.cmake)
 
   # register the library as a project dependency for internal cross-dependency management
-  sc_add_project_dependency("${_ARG_PROJECT_NAME}::${_ARG_TARGET_NAME}" ${_ARG_TARGET_NAME} "${PROJECT_VERSION}" "")
+  sc_add_project_dependency("${_ARG_PROJECT_NAME}::${_ARG_TARGET_NAME}" 
+    TARGETS 
+      ${_ARG_TARGET_NAME} 
+    VERSION 
+      "${PROJECT_VERSION}"
+  )
 
   include("${SIDECMAKE_DIR}/SCUtilities.cmake")
   sc_internal_list_append(Z_SC_ALL_TARGETS ${_ARG_TARGET_NAME})
@@ -541,10 +512,6 @@ function(sc_install_executable)
     PUBLIC ${_ARG_PUBLIC_INCLUDE_DIRS}
     PRIVATE 
       ${_ARG_PRIVATE_INCLUDE_DIRS}
-  )
-
-  target_include_directories(${_ARG_TARGET_NAME} 
-    SYSTEM PRIVATE 
       $<BUILD_INTERFACE:${_CONFIGURED_INCLUDE_INSTALL_DIR}>
   )
 

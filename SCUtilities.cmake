@@ -1,4 +1,6 @@
-cmake_policy(SET CMP0183 NEW)
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "4.0") 
+  cmake_policy(SET CMP0183 NEW)
+endif()
 
 #[[
 @file SCUtilities.cmake

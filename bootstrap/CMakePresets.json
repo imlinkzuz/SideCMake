@@ -8,18 +8,21 @@
     "include": [
         "ProjectPresets.json",
         "LocalPresets.json"
-    ],    
+    ],
     "configurePresets": [
         {
             "name": "conf-common",
             "description": "General settings that apply to all configurations",
             "hidden": true,
-            "inherits": ["conf-project","conf-local"],
+            "inherits": [
+                "conf-project",
+                "conf-local"
+            ],
             "binaryDir": "${sourceDir}/../_build/${presetName}",
             "installDir": "${sourceDir}/../_install/${presetName}"
         },
         {
-            "name" : "default",
+            "name": "default",
             "inherits": "conf-common"
         },
         {
@@ -53,39 +56,71 @@
             }
         },
         {
-            "name": "windows-msvc-debug",
-            "displayName": "msvc Debug",
-            "description": "Target Windows with the msvc compiler, debug build type",
+            "name": "windows-msvc",
+            "hidden": true,
+            "description": "Target Windows with the msvc compiler",
             "inherits": "conf-windows-common",
-            "environment": {"SC_BUILD_TYPE":"debug"},
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "cl",
-                "CMAKE_CXX_COMPILER": "cl",
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_CXX_COMPILER": "cl"
             }
         },
         {
             "name": "windows-msvc-release",
-            "displayName": "msvc Release",
-            "description": "Target Windows with the msvc compiler, release build type",
-            "inherits": "conf-windows-common",
-            "environment": {"SC_BUILD_TYPE":"release"},
+            "displayName": "MSVC-Release",
+            "description": "Target Windows with the msvc compiler, Release build type",
+            "inherits": "windows-msvc",
+            "environment": {
+                "SC_BUILD_TYPE": "release"
+            },
             "cacheVariables": {
-                "CMAKE_C_COMPILER": "cl",
-                "CMAKE_CXX_COMPILER": "cl",
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "windows-msvc-debug",
+            "displayName": "MSVC-Debug",
+            "description": "Target Windows with the msvc compiler, Debug build type",
+            "inherits": "windows-msvc",
+            "environment": {
+                "SC_BUILD_TYPE": "debug"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "windows-msvc-relwithdebinfo",
+            "displayName": "MSVC-RelWithDebInfo",
+            "description": "Target Windows with the msvc compiler, RelWithDebInfo build type",
+            "inherits": "windows-msvc",
+            "environment": {
+                "SC_BUILD_TYPE": "relwithdebinfo"
+            },
+            "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo"
             }
         },
         {
-            "name": "windows-clang-x64-debug",
-            "displayName": "clang Debug",
-            "description": "Target Windows with the clang compiler, debug build type",
+            "name": "windows-msvc-minsizerel",
+            "displayName": "MSVC-MinSizeRel",
+            "description": "Target Windows with the msvc compiler, MinSizeRel build type",
+            "inherits": "windows-msvc",
+            "environment": {
+                "SC_BUILD_TYPE": "minsizerel"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "MinSizeRel"
+            }
+        },
+        {
+            "name": "windows-clang-x64",
+            "hidden": true,
+            "description": "Target Windows with the clang x64 compiler",
             "inherits": "conf-windows-common",
-            "environment": {"SC_BUILD_TYPE":"debug"},
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "clang-cl",
-                "CMAKE_CXX_COMPILER": "clang-cl",
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_CXX_COMPILER": "clang-cl"
             },
             "vendor": {
                 "microsoft.com/VisualStudioSettings/CMake/1.0": {
@@ -95,31 +130,60 @@
         },
         {
             "name": "windows-clang-x64-release",
-            "displayName": "clang Release",
-            "description": "Target Windows with the clang compiler, release build type",
-            "inherits": "conf-windows-common",
-            "environment": {"SC_BUILD_TYPE":"release"},
-            "cacheVariables": {
-                "CMAKE_C_COMPILER": "clang-cl",
-                "CMAKE_CXX_COMPILER": "clang-cl",
-                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+            "displayName": "Clang-X64-Release",
+            "description": "Target Windows with the clang x64 compiler, Release build type",
+            "inherits": "windows-clang-x64",
+            "environment": {
+                "SC_BUILD_TYPE": "release"
             },
-            "vendor": {
-                "microsoft.com/VisualStudioSettings/CMake/1.0": {
-                    "intelliSenseMode": "windows-clang-x64"
-                }
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
             }
         },
         {
-            "name": "windows-clang-arm64-debug",
-            "displayName": "clang Debug",
-            "description": "Target Windows with the clang compiler, debug build type",
+            "name": "windows-clang-x64-debug",
+            "displayName": "Clang-X64-Debug",
+            "description": "Target Windows with the clang x64 compiler, Debug build type",
+            "inherits": "windows-clang-x64",
+            "environment": {
+                "SC_BUILD_TYPE": "debug"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "windows-clang-x64-relwithdebinfo",
+            "displayName": "Clang-X64-RelWithDebInfo",
+            "description": "Target Windows with the clang x64 compiler, RelWithDebInfo build type",
+            "inherits": "windows-clang-x64",
+            "environment": {
+                "SC_BUILD_TYPE": "relwithdebinfo"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+            }
+        },
+        {
+            "name": "windows-clang-x64-minsizerel",
+            "displayName": "Clang-X64-MinSizeRel",
+            "description": "Target Windows with the clang x64 compiler, MinSizeRel build type",
+            "inherits": "windows-clang-x64",
+            "environment": {
+                "SC_BUILD_TYPE": "minsizerel"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "MinSizeRel"
+            }
+        },
+        {
+            "name": "windows-clang-arm64",
+            "hidden": true,
+            "description": "Target Windows with the clang ARM64 compiler",
             "inherits": "conf-windows-common",
-            "environment": {"SC_BUILD_TYPE":"debug"},
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "clang-cl",
-                "CMAKE_CXX_COMPILER": "clang-cl",
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_CXX_COMPILER": "clang-cl"
             },
             "vendor": {
                 "microsoft.com/VisualStudioSettings/CMake/1.0": {
@@ -129,84 +193,338 @@
         },
         {
             "name": "windows-clang-arm64-release",
-            "displayName": "clang Release",
-            "description": "Target Windows with the clang compiler, release build type",
-            "inherits": "conf-windows-common",
-            "environment": {"SC_BUILD_TYPE":"release"},
-            "cacheVariables": {
-                "CMAKE_C_COMPILER": "clang-cl",
-                "CMAKE_CXX_COMPILER": "clang-cl",
-                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+            "displayName": "CLang-ARM64-Release",
+            "description": "Target Windows with the clang ARM64 compiler, Release build type",
+            "inherits": "windows-clang-arm64",
+            "environment": {
+                "SC_BUILD_TYPE": "release"
             },
-            "vendor": {
-                "microsoft.com/VisualStudioSettings/CMake/1.0": {
-                    "intelliSenseMode": "windows-clang-arm64"
-                }
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
             }
-        },        
+        },
         {
-            "name": "unixlike-gcc-debug",
-            "displayName": "gcc Debug",
-            "description": "Target Unix-like OS with the gcc compiler, debug build type",
+            "name": "windows-clang-arm64-debug",
+            "displayName": "Clang-ARM64-Debug",
+            "description": "Target Windows with the clang ARM64 compiler, Debug build type",
+            "inherits": "windows-clang-arm64",
+            "environment": {
+                "SC_BUILD_TYPE": "debug"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "windows-clang-arm64-relwithdebinfo",
+            "displayName": "Clang-ARM64-RelWithDebInfo",
+            "description": "Target Windows with the clang ARM64 compiler, RelWithDebInfo build type",
+            "inherits": "windows-clang-arm64",
+            "environment": {
+                "SC_BUILD_TYPE": "relwithdebinfo"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+            }
+        },
+        {
+            "name": "windows-clang-arm64-minsizerel",
+            "displayName": "Clang-ARM64-MinSizeRel",
+            "description": "Target Windows with the clang ARM64 compiler, MinSizeRel build type",
+            "inherits": "windows-clang-arm64",
+            "environment": {
+                "SC_BUILD_TYPE": "minsizerel"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "MinSizeRel"
+            }
+        },
+        {
+            "name": "unixlike-gcc",
+            "hidden": true,
+            "description": "Target Unix-like OS with the gcc compiler",
             "inherits": "conf-unixlike-common",
-            "environment": {"SC_BUILD_TYPE":"debug"},
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "gcc",
-                "CMAKE_CXX_COMPILER": "g++",
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_CXX_COMPILER": "g++"
             }
         },
         {
             "name": "unixlike-gcc-release",
-            "displayName": "gcc Release",
-            "description": "Target Unix-like OS with the gcc compiler, release build type",
-            "inherits": "conf-unixlike-common",
-            "environment": {"SC_BUILD_TYPE":"release"},
+            "displayName": "GCC-Release",
+            "description": "Target Unix-like OS with the gcc compiler, Release build type",
+            "inherits": "unixlike-gcc",
+            "environment": {
+                "SC_BUILD_TYPE": "release"
+            },
             "cacheVariables": {
-                "CMAKE_C_COMPILER": "gcc",
-                "CMAKE_CXX_COMPILER": "g++",
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "unixlike-gcc-debug",
+            "displayName": "GCC-Debug",
+            "description": "Target Unix-like OS with the gcc compiler, Debug build type",
+            "inherits": "unixlike-gcc",
+            "environment": {
+                "SC_BUILD_TYPE": "debug"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "unixlike-gcc-relwithdebinfo",
+            "displayName": "GCC-RelWithDebInfo",
+            "description": "Target Unix-like OS with the gcc compiler, RelWithDebInfo build type",
+            "inherits": "unixlike-gcc",
+            "environment": {
+                "SC_BUILD_TYPE": "relwithdebinfo"
+            },
+            "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo"
             }
         },
         {
-            "name": "unixlike-clang-debug",
-            "displayName": "clang Debug",
-            "description": "Target Unix-like OS with the clang compiler, debug build type",
+            "name": "unixlike-gcc-minsizerel",
+            "displayName": "GCC-MinSizeRel",
+            "description": "Target Unix-like OS with the gcc compiler, MinSizeRel build type",
+            "inherits": "unixlike-gcc",
+            "environment": {
+                "SC_BUILD_TYPE": "minsizerel"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "MinSizeRel"
+            }
+        },
+        {
+            "name": "unixlike-gcc-release",
+            "displayName": "GCC-Release",
+            "description": "Target Unix-like OS with the gcc compiler, Release build type",
+            "inherits": "unixlike-gcc",
+            "environment": {
+                "SC_BUILD_TYPE": "release"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "unixlike-gcc-debug",
+            "displayName": "GCC-Debug",
+            "description": "Target Unix-like OS with the gcc compiler, Debug build type",
+            "inherits": "unixlike-gcc",
+            "environment": {
+                "SC_BUILD_TYPE": "debug"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "unixlike-gcc-relwithdebinfo",
+            "displayName": "GCC-RelWithDebInfo",
+            "description": "Target Unix-like OS with the gcc compiler, RelWithDebInfo build type",
+            "inherits": "unixlike-gcc",
+            "environment": {
+                "SC_BUILD_TYPE": "relwithdebinfo"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+            }
+        },
+        {
+            "name": "unixlike-gcc-minsizerel",
+            "displayName": "GCC-MinSizeRel",
+            "description": "Target Unix-like OS with the gcc compiler, MinSizeRel build type",
+            "inherits": "unixlike-gcc",
+            "environment": {
+                "SC_BUILD_TYPE": "minsizerel"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "MinSizeRel"
+            }
+        },
+        {
+            "name": "unixlike-clang",
+            "hidden": true,
+            "description": "Target Unix-like OS with the clang compiler",
             "inherits": "conf-unixlike-common",
-            "environment": {"SC_BUILD_TYPE":"debug"},
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "clang",
-                "CMAKE_CXX_COMPILER": "clang++",
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_CXX_COMPILER": "clang++"
             }
         },
         {
             "name": "unixlike-clang-release",
-            "displayName": "clang Release",
-            "description": "Target Unix-like OS with the clang compiler, release build type",
-            "inherits": "conf-unixlike-common",
-            "environment": {"SC_BUILD_TYPE":"release"},
+            "displayName": "Clang-Release",
+            "description": "Target Unix-like OS with the clang compiler, Release build type",
+            "inherits": "unixlike-clang",
+            "environment": {
+                "SC_BUILD_TYPE": "release"
+            },
             "cacheVariables": {
-                "CMAKE_C_COMPILER": "clang",
-                "CMAKE_CXX_COMPILER": "clang++",
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "unixlike-clang-debug",
+            "displayName": "Clang-Debug",
+            "description": "Target Unix-like OS with the clang compiler, Debug build type",
+            "inherits": "unixlike-clang",
+            "environment": {
+                "SC_BUILD_TYPE": "debug"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "unixlike-clang-relwithdebinfo",
+            "displayName": "Clang-RelWithDebInfo",
+            "description": "Target Unix-like OS with the clang compiler, RelWithDebInfo build type",
+            "inherits": "unixlike-clang",
+            "environment": {
+                "SC_BUILD_TYPE": "relwithdebinfo"
+            },
+            "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo"
             }
         },
         {
-            "name": "Xcode-clang-debug",
-            "displayName": "Xcode Debug",
-            "description": "Target macOS OS with the clang compiler, debug build type",
-            "inherits": "conf-unixlike-common",
-            "generator": "Xcode",
-            "environment": {"SC_BUILD_TYPE":"debug"},
+            "name": "unixlike-clang-minsizerel",
+            "displayName": "Clang-MinSizeRel",
+            "description": "Target Unix-like OS with the clang compiler, MinSizeRel build type",
+            "inherits": "unixlike-clang",
+            "environment": {
+                "SC_BUILD_TYPE": "minsizerel"
+            },
             "cacheVariables": {
-                "CMAKE_C_COMPILER": "clang",
-                "CMAKE_CXX_COMPILER": "clang++",
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_BUILD_TYPE": "MinSizeRel"
             }
         }
-
-
+    ],
+    "buildPresets": [
+        {
+            "name": "windows-msvc-release",
+            "displayName": "Release",
+            "configurePreset": "windows-msvc-release",
+            "configuration": "Release"
+        },
+        {
+            "name": "windows-msvc-debug",
+            "displayName": "Debug",
+            "configurePreset": "windows-msvc-debug",
+            "configuration": "Debug"
+        },
+        {
+            "name": "windows-msvc-relwithdebinfo",
+            "displayName": "RelWithDebInfo",
+            "configurePreset": "windows-msvc-relwithdebinfo",
+            "configuration": "RelWithDebInfo"
+        },
+        {
+            "name": "windows-msvc-minsizerel",
+            "displayName": "MinSizeRel",
+            "configurePreset": "windows-msvc-minsizerel",
+            "configuration": "MinSizeRel"
+        },
+        {
+            "name": "windows-clang-x64-release",
+            "displayName": "Release",
+            "configurePreset": "windows-clang-x64-release",
+            "configuration": "Release"
+        },
+        {
+            "name": "windows-clang-x64-debug",
+            "displayName": "Debug",
+            "configurePreset": "windows-clang-x64-debug",
+            "configuration": "Debug"
+        },
+        {
+            "name": "windows-clang-x64-relwithdebinfo",
+            "displayName": "RelWithDebInfo",
+            "configurePreset": "windows-clang-x64-relwithdebinfo",
+            "configuration": "RelWithDebInfo"
+        },
+        {
+            "name": "windows-clang-x64-minsizerel",
+            "displayName": "MinSizeRel",
+            "configurePreset": "windows-clang-x64-minsizerel",
+            "configuration": "MinSizeRel"
+        },
+        {
+            "name": "windows-clang-arm64-release",
+            "displayName": "Release",
+            "configurePreset": "windows-clang-arm64-release",
+            "configuration": "Release"
+        },
+        {
+            "name": "windows-clang-arm64-debug",
+            "displayName": "Debug",
+            "configurePreset": "windows-clang-arm64-debug",
+            "configuration": "Debug"
+        },
+        {
+            "name": "windows-clang-arm64-relwithdebinfo",
+            "displayName": "RelWithDebInfo",
+            "configurePreset": "windows-clang-arm64-relwithdebinfo",
+            "configuration": "RelWithDebInfo"
+        },
+        {
+            "name": "windows-clang-arm64-minsizerel",
+            "displayName": "MinSizeRel",
+            "configurePreset": "windows-clang-arm64-minsizerel",
+            "configuration": "MinSizeRel"
+        },
+        {
+            "name": "unixlike-gcc-release",
+            "displayName": "Release",
+            "configurePreset": "unixlike-gcc-release",
+            "configuration": "Release"
+        },
+        {
+            "name": "unixlike-gcc-debug",
+            "displayName": "Debug",
+            "configurePreset": "unixlike-gcc-debug",
+            "configuration": "Debug"
+        },
+        {
+            "name": "unixlike-gcc-relwithdebinfo",
+            "displayName": "RelWithDebInfo",
+            "configurePreset": "unixlike-gcc-relwithdebinfo",
+            "configuration": "RelWithDebInfo"
+        },
+        {
+            "name": "unixlike-gcc-minsizerel",
+            "displayName": "MinSizeRel",
+            "configurePreset": "unixlike-gcc-minsizerel",
+            "configuration": "MinSizeRel"
+        },
+        {
+            "name": "unixlike-clang-release",
+            "displayName": "Release",
+            "configurePreset": "unixlike-clang-release",
+            "configuration": "Release"
+        },
+        {
+            "name": "unixlike-clang-debug",
+            "displayName": "Debug",
+            "configurePreset": "unixlike-clang-debug",
+            "configuration": "Debug"
+        },
+        {
+            "name": "unixlike-clang-relwithdebinfo",
+            "displayName": "RelWithDebInfo",
+            "configurePreset": "unixlike-clang-relwithdebinfo",
+            "configuration": "RelWithDebInfo"
+        },
+        {
+            "name": "unixlike-clang-minsizerel",
+            "displayName": "MinSizeRel",
+            "configurePreset": "unixlike-clang-minsizerel",
+            "configuration": "MinSizeRel"
+        }
     ],
     "testPresets": [
         {
@@ -222,60 +540,150 @@
             }
         },
         {
-            "name": "test-windows-clang-x64-debug",
+            "name": "default",
+            "displayName": "Strict",
+            "description": "Enable output and stop on failure",
+            "inherits": "test-common"
+        },
+        {
+            "name": "windows-msvc-release",
             "displayName": "Strict",
             "description": "Enable output and stop on failure",
             "inherits": "test-common",
-            "configurePreset": "windows-clang-x64-debug"
+            "configurePreset": "windows-msvc-release"
         },
         {
-            "name": "test-windows-clang-x64-release",
+            "name": "windows-msvc-debug",
+            "displayName": "Strict",
+            "description": "Enable output and stop on failure",
+            "inherits": "test-common",
+            "configurePreset": "windows-msvc-debug"
+        },
+        {
+            "name": "windows-msvc-relwithdebinfo",
+            "displayName": "Strict",
+            "description": "Enable output and stop on failure",
+            "inherits": "test-common",
+            "configurePreset": "windows-msvc-relwithdebinfo"
+        },
+        {
+            "name": "windows-msvc-minsizerel",
+            "displayName": "Strict",
+            "description": "Enable output and stop on failure",
+            "inherits": "test-common",
+            "configurePreset": "windows-msvc-minsizerel"
+        },
+        {
+            "name": "windows-clang-x64-release",
             "displayName": "Strict",
             "description": "Enable output and stop on failure",
             "inherits": "test-common",
             "configurePreset": "windows-clang-x64-release"
         },
         {
-            "name": "test-windows-clang-arm64-debug",
+            "name": "windows-clang-x64-debug",
+            "displayName": "Strict",
+            "description": "Enable output and stop on failure",
+            "inherits": "test-common",
+            "configurePreset": "windows-clang-x64-debug"
+        },
+        {
+            "name": "windows-clang-x64-relwithdebinfo",
+            "displayName": "Strict",
+            "description": "Enable output and stop on failure",
+            "inherits": "test-common",
+            "configurePreset": "windows-clang-x64-relwithdebinfo"
+        },
+        {
+            "name": "windows-clang-x64-minsizerel",
+            "displayName": "Strict",
+            "description": "Enable output and stop on failure",
+            "inherits": "test-common",
+            "configurePreset": "windows-clang-x64-minsizerel"
+        },
+        {
+            "name": "windows-clang-arm64-release",
+            "displayName": "Strict",
+            "description": "Enable output and stop on failure",
+            "inherits": "test-common",
+            "configurePreset": "windows-clang-arm64-release"
+        },
+        {
+            "name": "windows-clang-arm64-debug",
             "displayName": "Strict",
             "description": "Enable output and stop on failure",
             "inherits": "test-common",
             "configurePreset": "windows-clang-arm64-debug"
         },
         {
-            "name": "test-windows-clang-arm64-release",
+            "name": "windows-clang-arm64-relwithdebinfo",
             "displayName": "Strict",
             "description": "Enable output and stop on failure",
             "inherits": "test-common",
-            "configurePreset": "windows-clang-arm64-release"
-        },        
-        {
-            "name": "test-unixlike-gcc-debug",
-            "displayName": "Strict",
-            "description": "Enable output and stop on failure",
-            "inherits": "test-common",
-            "configurePreset": "unixlike-gcc-debug"
+            "configurePreset": "windows-clang-arm64-relwithdebinfo"
         },
         {
-            "name": "test-unixlike-gcc-release",
+            "name": "windows-clang-arm64-minsizerel",
+            "displayName": "Strict",
+            "description": "Enable output and stop on failure",
+            "inherits": "test-common",
+            "configurePreset": "windows-clang-arm64-minsizerel"
+        },
+        {
+            "name": "unixlike-gcc-release",
             "displayName": "Strict",
             "description": "Enable output and stop on failure",
             "inherits": "test-common",
             "configurePreset": "unixlike-gcc-release"
         },
         {
-            "name": "test-unixlike-clang-debug",
+            "name": "unixlike-gcc-debug",
+            "displayName": "Strict",
+            "description": "Enable output and stop on failure",
+            "inherits": "test-common",
+            "configurePreset": "unixlike-gcc-debug"
+        },
+        {
+            "name": "unixlike-gcc-relwithdebinfo",
+            "displayName": "Strict",
+            "description": "Enable output and stop on failure",
+            "inherits": "test-common",
+            "configurePreset": "unixlike-gcc-relwithdebinfo"
+        },
+        {
+            "name": "unixlike-gcc-minsizerel",
+            "displayName": "Strict",
+            "description": "Enable output and stop on failure",
+            "inherits": "test-common",
+            "configurePreset": "unixlike-gcc-minsizerel"
+        },
+        {
+            "name": "unixlike-clang-release",
+            "displayName": "Strict",
+            "description": "Enable output and stop on failure",
+            "inherits": "test-common",
+            "configurePreset": "unixlike-clang-release"
+        },
+        {
+            "name": "unixlike-clang-debug",
             "displayName": "Strict",
             "description": "Enable output and stop on failure",
             "inherits": "test-common",
             "configurePreset": "unixlike-clang-debug"
         },
         {
-            "name": "test-unixlike-clang-release",
+            "name": "unixlike-clang-relwithdebinfo",
             "displayName": "Strict",
             "description": "Enable output and stop on failure",
             "inherits": "test-common",
-            "configurePreset": "unixlike-clang-release"
+            "configurePreset": "unixlike-clang-relwithdebinfo"
+        },
+        {
+            "name": "unixlike-clang-minsizerel",
+            "displayName": "Strict",
+            "description": "Enable output and stop on failure",
+            "inherits": "test-common",
+            "configurePreset": "unixlike-clang-minsizerel"
         }
     ]
 }

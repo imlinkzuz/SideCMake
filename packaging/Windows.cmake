@@ -35,9 +35,17 @@ endif ()
 
 # Icons 
 if (NOT _ARG_ICON) 
-  set(_ARG_ICON ${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/app.ico)
-  CMAKE_PATH(NATIVE_PATH _ARG_ICON  NORMALIZE _ARG_ICON)
-  string(REPLACE "\\" "\\\\" _ARG_ICON ${_ARG_ICON})
+  if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/app.ico)
+    set(_ARG_ICON ${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/app.ico)
+  else()
+    set(_ARG_ICON ${SIDECMAKE_DIR}/resources/icons/app.ico)
+  endif()  
+  if (EXISTS ${_ARG_ICON})
+    CMAKE_PATH(NATIVE_PATH _ARG_ICON  NORMALIZE _ARG_ICON)
+    string(REPLACE "\\" "\\\\" _ARG_ICON ${_ARG_ICON})
+  else()
+    unset(_ARG_ICON)
+  endif()
 endif()  
 
 # Use main entry for Windows GUI app.
@@ -60,8 +68,8 @@ endif ()
 # For development:
 
 # set _RC_PRODUCT_VERSION_STR/_RC_PROJECT_VERSION_STR for rc file
-string(REPLACE "." "," _RC_PRODUCT_VERSION_STR ${SC_PRODUCT_NAME})
-string(REPLACE "." "," _RC_PROJECT_VERSION_STR ${SC_PRODUCT_VERSION})
+string(REPLACE "." "," _RC_PRODUCT_VERSION_STR ${SC_PRODUCT_VERSION})
+string(REPLACE "." "," _RC_PROJECT_VERSION_STR ${SC_PROJECT_VERSION})
 
 if (NOT _ARG_RC_FILE)
   if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/manifests/app.rc.in)
@@ -132,8 +140,6 @@ foreach(my_rc ${_ARG_RESOURCES})
     #     $<TARGET_FILE_DIR:${_ARG_TARGET_NAME}>/resources/${my_rel_dest})
 
   endif()
-
-endforeach()  
 
 endforeach()
 

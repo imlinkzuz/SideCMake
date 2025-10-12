@@ -61,7 +61,9 @@ if(MSVC)
 endif()
 
 # set the startup project for the "play" button in MSVC
-set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT ${SC_PROJECT_NAME})
+# Unless you are working under Visual Studio, this has no effect
+# Change ${SC_PROJECT_NAME} to the name of the target you want to start if different
+# set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT ${SC_PROJECT_NAME})
 
 # Documentation generation
 if (SC_ENABLE_DOC)
