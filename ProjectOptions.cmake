@@ -38,7 +38,7 @@ macro(myproject_setup_options)
   set(_runtime_os_64 OFF)
   if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     set(_runtime_os_64 ON)
-    add_compile_definitions(Z_SC_RUNTIME_OS_64)
+    add_compile_definitions(SC_RUNTIME_OS_64)
   endif()
   sc_global_set(Z_SC_RUNTIME_OS_64 ${_runtime_os_64} "Determine architecture (32/64 bit)" INTERNAL)
   unset(_runtime_os_64)
@@ -67,10 +67,13 @@ macro(myproject_setup_options)
   myproject_supports_sanitizers()
 
   if (NOT DEFINED SC_ENABLE_DEVELOPER_MODE) 
-    sc_global_set(SC_ENABLE_DEVELOPER_MODE PROJECT_IS_TOP_LEVEL AND NOT CMAKE_PACKAGING_MAINTAINER_MODE "Enable developer-focused build options and checks" CACHE BOOL GROUP "Build Configuration")
+    sc_global_set(SC_ENABLE_DEVELOPER_MODE ${PROJECT_IS_TOP_LEVEL} AND NOT ${CMAKE_PACKAGING_MAINTAINER_MODE} "Enable developer-focused build options and checks" CACHE BOOL GROUP "Build Configuration")
   endif()
 
-  sc_global_set(SC_ENABLE_IPO ${SC_ENABLE_DEVELOPER_MODE} "Enable IPO/LTO" CACHE BOOL ADVANCED GROUP "Build Configuration")
+  # Be aware that enabling IPO may significantly increase build times and memory usage
+  # Also -flto may cause lack of debug info(source files) in Apple Clang
+  # Set SC_ENABLE_IPO to ON unless you know what you are doing
+  sc_global_set(SC_ENABLE_IPO OFF "Enable IPO/LTO" CACHE BOOL ADVANCED GROUP "Build Configuration")
   sc_global_set(SC_WARNINGS_AS_ERRORS ${SC_ENABLE_DEVELOPER_MODE} "Treat Warnings As Errors" CACHE BOOL ADVANCED GROUP "Build Configuration")
   sc_global_set(SC_ENABLE_USER_LINKER OFF "Enable user-selected linker" CACHE BOOL ADVANCED GROUP "Build Configuration")
   sc_global_set(SC_ENABLE_SANITIZER_LEAK OFF "Enable leak sanitizer" CACHE BOOL ADVANCED GROUP "Build Configuration")
@@ -117,7 +120,7 @@ macro(myproject_setup_options)
     set(DEFAULT_FUZZER OFF)
   endif()
 
-  sc_global_set(SC_BUILD_FUZZ_TESTS ${DEFAULT_FUZZER} "Enable fuzz testing executable" CACHE BOOL ADVANCED GROUP "Build Configuration")
+  sc_global_set(SC_BUILD_FUZZ_TESTS ${DEFAULT_FUZZER} "Fuzz Tests" CACHE BOOL ADVANCED GROUP "Build Configuration")
 
 endmacro()
 

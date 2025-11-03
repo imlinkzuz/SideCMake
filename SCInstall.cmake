@@ -180,7 +180,7 @@ function(sc_install_project)
     )
   endif()
   
-  set(_CONFIGURED_INCLUDE_INSTALL_DIR "${PROJECT_BINARY_DIR}/configured_files/include")
+  set(_CONFIGURED_INCLUDE_INSTALL_DIR "${CMAKE_BINARY_DIR}/configured_files/include")
 
   # Generate config.h
   ## try to use configured_file in ${CMAKE_CURRENT_SOURCE_DIR} first, then fallback to ${SIDECMAKE_DIR}/configured_file/config.hpp.in
@@ -240,7 +240,7 @@ function(sc_install_library)
   set(_oneValueArgs  
     PROJECT_NAME # The project name, if not specified, it will use the ${PROJECT_NAME}
     TARGET_NAME  # The target name, this is the name of the library to be created
-    LINK_TYPE    # 'AUTO':determined by BUILD_SHARED_LIBS. 'STATIC': build static library. 'SHARED': build shared library. Default value is 'AUTO'.
+    LINK_TYPE    # AUTO/INTERFACE/STATIC/SHARED 'AUTO':determined by BUILD_SHARED_LIBS. 'STATIC': build static library. 'SHARED': build shared library. Default value is 'AUTO'.
   )
   
   set(_multiValueArgs 
@@ -280,14 +280,18 @@ function(sc_install_library)
     if (BUILD_SHARED_LIBS) 
       set(_ARG_LINK_TYPE "SHARED")
     else()
-      set(_ARG_LINK_TYPE "STATIC")
+      if (DEFINED _ARG_INTERFACE_SOURCES OR DEFINED _ARG_PUBLIC_SOURCES OR DEFINED _ARG_PRIVATE_SOURCES)
+        set(_ARG_LINK_TYPE "STATIC")
+      else()
+        set(_ARG_LINK_TYPE "INTERFACE")
+      endif()
     endif()  
   endif()
-  
+
   # *****************************************
   # Add library and set the properties
   # *****************************************
-  add_library(${_ARG_TARGET_NAME})
+  add_library(${_ARG_TARGET_NAME} ${_ARG_LINK_TYPE})
 
   if (NOT TARGET ${_ARG_PROJECT_NAME}::${_ARG_TARGET_NAME})
     add_library(${_ARG_PROJECT_NAME}::${_ARG_TARGET_NAME} ALIAS ${_ARG_TARGET_NAME})
@@ -301,32 +305,38 @@ function(sc_install_library)
   # *****************************************
   # Add sources, include directories and dependencies
   # *****************************************
-  target_sources(${_ARG_TARGET_NAME}
-    INTERFACE ${_ARG_INTERFACE_SOURCES}
-    PUBLIC ${_ARG_PUBLIC_SOURCES}
-    PRIVATE ${_ARG_PRIVATE_SOURCES}
-  )
+  if (NOT _ARG_LINK_TYPE STREQUAL "INTERFACE")
+    target_sources(${_ARG_TARGET_NAME}
+      INTERFACE ${_ARG_INTERFACE_SOURCES}
+      PUBLIC ${_ARG_PUBLIC_SOURCES}
+      PRIVATE ${_ARG_PRIVATE_SOURCES}
+    )
+  endif() 
 
-  set(_CONFIGURED_INCLUDE_INSTALL_DIR "${PROJECT_BINARY_DIR}/configured_files/include")
+  set(_CONFIGURED_INCLUDE_INSTALL_DIR "${CMAKE_BINARY_DIR}/configured_files/include")
   
   # *****************************************
   # Install the public header files
   # *****************************************
-  target_include_directories(${_ARG_TARGET_NAME}
-    PRIVATE 
-      $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-      ${_ARG_PRIVATE_INCLUDE_DIRS}
-  )
+  if (NOT _ARG_LINK_TYPE STREQUAL "INTERFACE")
+    target_include_directories(${_ARG_TARGET_NAME} 
+      INTERFACE
+        ${_ARG_INTERFACE_INCLUDE_DIRS}
+      PUBLIC
+        ${_ARG_PUBLIC_INCLUDE_DIRS}
+      PRIVATE 
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        ${_ARG_PRIVATE_INCLUDE_DIRS}
+        $<BUILD_INTERFACE:${_CONFIGURED_INCLUDE_INSTALL_DIR}>
+    )
+  else()
+    target_include_directories(${_ARG_TARGET_NAME}
+      INTERFACE
+        ${_ARG_INTERFACE_INCLUDE_DIRS}
+    )
+  endif()
 
-  target_include_directories(${_ARG_TARGET_NAME} 
-    INTERFACE
-      ${_ARG_INTERFACE_INCLUDE_DIRS}
-    PUBLIC
-      ${_ARG_PUBLIC_INCLUDE_DIRS}
-    PRIVATE 
-      $<BUILD_INTERFACE:${_CONFIGURED_INCLUDE_INSTALL_DIR}>
-  )
 
   foreach(_inc ${_ARG_INSTALLED_INCLUDE_DIRS})
       if (IS_ABSOLUTE ${_inc})
@@ -342,6 +352,10 @@ function(sc_install_library)
 
   target_link_libraries(${_ARG_TARGET_NAME}  PRIVATE  ${_system_library_options})
 
+  #message("###################### link INTERFACE ${_interface_link_targets}")
+  #message("###################### link PUBLIC ${_public_link_targets}")
+  #message("###################### link PRIVATE ${_private_link_targets}")
+
   target_link_system_libraries(${_ARG_TARGET_NAME}
     INTERFACE ${_interface_link_targets}
     PUBLIC ${_public_link_targets}
@@ -349,14 +363,17 @@ function(sc_install_library)
   )
 
   # Generate MSVC export header
-  set(_TARGET_EXPORT_HEADER_FILE "${_CONFIGURED_INCLUDE_INSTALL_DIR}/${_ARG_PROJECT_NAME}/${_ARG_TARGET_NAME}_export.hpp")
-  string(TOUPPER "${_ARG_PROJECT_NAME}_" _TARGET_EXPORT_PREFIX_NAME)
-  include(GenerateExportHeader)
-  generate_export_header(${_ARG_TARGET_NAME} EXPORT_FILE_NAME ${_TARGET_EXPORT_HEADER_FILE} PREFIX_NAME ${_TARGET_EXPORT_PREFIX_NAME})
-  install(FILES
-    ${_TARGET_EXPORT_HEADER_FILE}
-    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${_ARG_PROJECT_NAME}"
-  )
+  if (NOT _ARG_LINK_TYPE STREQUAL "INTERFACE")
+    set(_TARGET_EXPORT_HEADER_FILE "${_CONFIGURED_INCLUDE_INSTALL_DIR}/${_ARG_PROJECT_NAME}/${_ARG_TARGET_NAME}_export.hpp")
+    string(TOUPPER "${_ARG_PROJECT_NAME}_" _TARGET_EXPORT_PREFIX_NAME)
+    include(GenerateExportHeader)
+    generate_export_header(${_ARG_TARGET_NAME} EXPORT_FILE_NAME ${_TARGET_EXPORT_HEADER_FILE} PREFIX_NAME ${_TARGET_EXPORT_PREFIX_NAME})
+    install(FILES
+      ${_TARGET_EXPORT_HEADER_FILE}
+      DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${_ARG_PROJECT_NAME}"
+    )
+    message(STATUS "Generating export header at ${_TARGET_EXPORT_HEADER_FILE}")
+  endif()
 
   # Register the dependencies for the Config.cmake.in
   set(_config_find_dependencies "")
@@ -498,13 +515,7 @@ function(sc_install_executable)
     PRIVATE ${_ARG_PRIVATE_SOURCES}
   )  
 
-  set(_CONFIGURED_INCLUDE_INSTALL_DIR "${PROJECT_BINARY_DIR}/configured_files/include")
-
-  target_include_directories(${_ARG_TARGET_NAME}
-    PRIVATE 
-      $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  )
+  set(_CONFIGURED_INCLUDE_INSTALL_DIR "${CMAKE_BINARY_DIR}/configured_files/include")
 
   target_include_directories(${_ARG_TARGET_NAME}
     INTERFACE 
@@ -512,6 +523,8 @@ function(sc_install_executable)
     PUBLIC ${_ARG_PUBLIC_INCLUDE_DIRS}
     PRIVATE 
       ${_ARG_PRIVATE_INCLUDE_DIRS}
+      $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
       $<BUILD_INTERFACE:${_CONFIGURED_INCLUDE_INSTALL_DIR}>
   )
 

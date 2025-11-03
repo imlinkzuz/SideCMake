@@ -56,7 +56,7 @@ sc_install_project()
 # so that it behaves well with MSVC's debugger, and we can run the target from visual studio
 if(MSVC)
   get_all_installable_targets(all_targets)
-  message("all_targets=${all_targets}")
+  #message("all_targets=${all_targets}")
   set_target_properties(${all_targets} PROPERTIES VS_DEBUGGER_ENVIRONMENT "PATH=$(VC_ExecutablePath_${VCVARSALL_ARCH});%PATH%")
 endif()
 
@@ -72,6 +72,7 @@ endif()
 
 if (BUILD_TESTING)
   include(CTest)
+  enable_testing()
   add_subdirectory(test)
 endif()
 # Print a summary of the build configuration
