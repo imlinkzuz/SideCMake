@@ -1,0 +1,20 @@
+{
+    "version": 5,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 21,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "conf-local",
+            "hidden": true,
+            "vendor": {
+            },
+            "cacheVariables": {
+            },
+            "environment": {
+            }
+        }
+    ]
+}

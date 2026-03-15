@@ -32,9 +32,10 @@ if (NOT _ARG_ICON)
   else()
     set(_ARG_ICON ${SIDECMAKE_DIR}/resources/icons/app.icns)
   endif()  
-  if (NOT EXISTS ${_ARG_ICON})
-    unset(_ARG_ICON)
-  endif()
+  #if (NOT EXISTS ${_ARG_ICON})
+  #  message(WARNING "No icon specified for macOS bundle, and default icon not found at ${_ARG_ICON}. The app bundle may not display the correct icon.")
+  #  unset(_ARG_ICON)
+  #endif()
 endif()  
 
 if (_ARG_ICON)
@@ -57,13 +58,16 @@ endforeach()
 
 foreach(my_rc ${_ARG_RESOURCES})
 
-  if (NOT IS_ABSOLUTE ${my_rc})
-    set(my_formalize_rc "${CMAKE_CURRENT_SOURCE_DIR}/${my_rc}")
-  else()
+
+  if (IS_ABSOLUTE ${my_rc})
     set(my_formalize_rc "${my_rc}")  
+  else()
+    set(my_formalize_rc "${CMAKE_CURRENT_SOURCE_DIR}/${my_rc}")
   endif()
 
-  string(REGEX REPLACE ".*resources/" "" my_rel_dest ${my_rc})
+  string(REGEX REPLACE ".*assets/" "" my_rel_dest ${my_rc})
+  string(REGEX REPLACE ".*resources/" "" my_rel_dest ${my_rel_dest})
+  message("----------------- Adding resource ${my_formalize_rc} with relative destination ${my_rel_dest}")
 
   if (IS_DIRECTORY ${my_formalize_rc})
     # For build

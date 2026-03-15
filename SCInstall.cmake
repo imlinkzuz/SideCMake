@@ -257,9 +257,14 @@ function(sc_install_library)
     INSTALLED_INCLUDE_DIRS # The header directories to be installed, these directories will be installed to ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME} 
    )
 
+  set(_optionalArgs
+    DISABLE_PROJECT_OPTIONS
+    DISABLE_PROJECT_WARNINGS 
+  )
+
   cmake_parse_arguments(
     _ARG
-    ""
+    "${_optionalArgs}"
     "${_oneValueArgs}"
     "${_multiValueArgs}"
     "${ARGN}")
@@ -287,6 +292,7 @@ function(sc_install_library)
       endif()
     endif()  
   endif()
+
 
   # *****************************************
   # Add library and set the properties
@@ -350,7 +356,13 @@ function(sc_install_library)
   sc_collect_targets(_ARG_PUBLIC_DEPENDENCIES _public_link_targets)
   sc_collect_targets(_ARG_PRIVATE_DEPENDENCIES _private_link_targets)
 
-  target_link_libraries(${_ARG_TARGET_NAME}  PRIVATE  ${_system_library_options})
+  if (NOT _ARG_DISABLE_PROJECT_OPTIONS)
+     target_link_libraries(${_ARG_TARGET_NAME}  PRIVATE  ${SC_BUILD_OPTIONS})
+  endif()     
+
+  if (NOT _ARG_DISABLE_PROJECT_WARNINGS)
+     target_link_libraries(${_ARG_TARGET_NAME}  PRIVATE  ${SC_BUILD_WARNINGS})
+  endif()     
 
   #message("###################### link INTERFACE ${_interface_link_targets}")
   #message("###################### link PUBLIC ${_public_link_targets}")
@@ -476,9 +488,15 @@ function(sc_install_executable)
     RESOURCES # The resources to be added to the target, these resources will be copied to the Resources directory of the target
    )  
 
+  set(_optionalArgs
+    DISABLE_PROJECT_OPTIONS
+    DISABLE_PROJECT_WARNINGS 
+  )
+
+
   cmake_parse_arguments(
     _ARG
-    ""
+    "${_optionalArgs}"
     "${_oneValueArgs}"
     "${_multiValueArgs}"
     "${ARGN}")
@@ -491,6 +509,7 @@ function(sc_install_executable)
   if (NOT _ARG_PROJECT_NAME)
     set(_ARG_PROJECT_NAME ${PROJECT_NAME})
   endif()
+
 
   string(TOUPPER "${_ARG_OPTIONS}" _ARG_OPTIONS)
 
@@ -527,6 +546,14 @@ function(sc_install_executable)
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
       $<BUILD_INTERFACE:${_CONFIGURED_INCLUDE_INSTALL_DIR}>
   )
+
+  if (NOT _ARG_DISABLE_PROJECT_OPTIONS)
+     target_link_libraries(${_ARG_TARGET_NAME}  PUBLIC SC_BUILD_OPTIONS)
+  endif()     
+
+  if (NOT _ARG_DISABLE_PROJECT_WARNINGS)
+     target_link_libraries(${_ARG_TARGET_NAME}  PUBLIC  SC_BUILD_WARNINGS)
+  endif()  
 
   sc_collect_targets(_ARG_INTERFACE_DEPENDENCIES _interface_link_targets)
   sc_collect_targets(_ARG_PUBLIC_DEPENDENCIES _public_link_targets)
