@@ -67,6 +67,35 @@ endif ()
 # Copy .dll files on Windows to the target App build folder.
 # For development:
 
+add_custom_command(
+  TARGET ${_ARG_TARGET_NAME} 
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          $<TARGET_RUNTIME_DLLS:${_ARG_TARGET_NAME}>
+          $<TARGET_FILE_DIR:${_ARG_TARGET_NAME}>
+          COMMAND_EXPAND_LISTS
+  COMMENT "Copying DLLs to the executable directory"
+)
+
+install(TARGETS ${_ARG_TARGET_NAME} 
+    RUNTIME_DEPENDENCIES 
+    PRE_EXCLUDE_REGEXES "api-ms-.*" "ext-ms-.*" # Exclude API sets
+    POST_EXCLUDE_REGEXES ".*WINDOWS[\\\\/]system32.*" # Exclude system32
+    DESTINATION ${CMAKE_BINARY_DIR} 
+)
+
+# Old way to copy .dll files, which is not recommended as it may miss some dependencies:
+# foreach(my_target ${_ARG_SHARED_TARGETS})
+#   # For build
+#   add_custom_command(TARGET ${_ARG_TARGET_NAME} POST_BUILD
+#     COMMAND ${CMAKE_COMMAND} -E copy_if_different
+#     $<TARGET_FILE:${my_target}>
+#     $<TARGET_FILE_DIR:${_ARG_TARGET_NAME}>)
+
+#   # For distribution:
+#   install(FILES $<TARGET_FILE:${my_target}> DESTINATION ${CMAKE_INSTALL_BINDIR})
+# endforeach()
+
 # set _RC_PRODUCT_VERSION_STR/_RC_PROJECT_VERSION_STR for rc file
 string(REPLACE "." "," _RC_PRODUCT_VERSION_STR ${SC_PRODUCT_VERSION})
 string(REPLACE "." "," _RC_PROJECT_VERSION_STR ${SC_PROJECT_VERSION})
@@ -86,19 +115,6 @@ target_sources(${_ARG_TARGET_NAME}
     ${_ARG_RC_FILE}
 )
 
-
-foreach(my_target ${_ARG_SHARED_TARGETS})
-  # For build
-  add_custom_command(TARGET ${_ARG_TARGET_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    $<TARGET_FILE:${my_target}>
-    $<TARGET_FILE_DIR:${_ARG_TARGET_NAME}>)
-
-  # For distribution:
-  install(FILES $<TARGET_FILE:${my_target}> DESTINATION ${CMAKE_INSTALL_BINDIR})
-endforeach()
-
-
 # Copy resources into app bundle
 foreach(my_rc ${_ARG_RESOURCES})
 
@@ -108,7 +124,9 @@ foreach(my_rc ${_ARG_RESOURCES})
     set(my_formalize_rc "${my_rc}")  
   endif()
 
-  string(REGEX REPLACE ".*resources/" "" my_rel_dest ${my_rc})
+  # Remove the leading path before "assets/" or "resources/" to get the relative destination path
+  string(REGEX REPLACE ".*assets/" "" my_rel_dest ${my_rc})
+  string(REGEX REPLACE ".*resources/" "" my_rel_dest ${my_rel_dest})
 
   if (IS_DIRECTORY ${my_formalize_rc})
     message(STATUS "Copying directory ${my_formalize_rc} to ${CMAKE_CURRENT_BINARY_DIR}/resources/${my_rel_dest}")
