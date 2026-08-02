@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.28)
 
+include(${SIDECMAKE_DIR}/SCInstall.cmake)
+
 function(sc_add_unit_test) 
   cmake_parse_arguments(
     _ARG
@@ -31,6 +33,11 @@ function(sc_add_unit_test)
       list(APPEND _library_targets ${_my_target})
     endif()
   endforeach()  
+
+  sc_collect_targets(_ARG_TEST_DEPENDENCIES _test_deps_targets)
+  foreach(_deps ${_test_deps_targets})
+    list(APPEND _library_targets ${_deps})
+  endforeach()
 
   
   if (NOT PROJECT_NAME STREQUAL "CmakeConfigPackageTests")
@@ -132,6 +139,12 @@ function(sc_add_compile_only_test)
       list(APPEND _library_targets ${_my_target})
     endif()
   endforeach()  
+
+
+  sc_collect_targets(_ARG_TEST_DEPENDENCIES _test_deps_targets)
+  foreach(_deps ${_test_deps_targets})
+    list(APPEND _library_targets ${_deps})
+  endforeach()
 
   
   if (NOT PROJECT_NAME STREQUAL "CmakeConfigPackageTests")

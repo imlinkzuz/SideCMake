@@ -124,9 +124,12 @@ foreach(my_rc ${_ARG_RESOURCES})
     set(my_formalize_rc "${my_rc}")  
   endif()
 
+  message(status "###########-------- process resource ${my_rc}")
+
   # Remove the leading path before "assets/" or "resources/" to get the relative destination path
   string(REGEX REPLACE ".*assets/" "" my_rel_dest ${my_rc})
   string(REGEX REPLACE ".*resources/" "" my_rel_dest ${my_rel_dest})
+  message(status "###########-------- process resource after replace ${my_rel_dest}")
 
   if (IS_DIRECTORY ${my_formalize_rc})
     message(STATUS "Copying directory ${my_formalize_rc} to ${CMAKE_CURRENT_BINARY_DIR}/resources/${my_rel_dest}")
@@ -144,8 +147,13 @@ foreach(my_rc ${_ARG_RESOURCES})
     #     $<TARGET_FILE_DIR:${_ARG_TARGET_NAME}>/resources/${my_rel_dest})
   else()
     cmake_path(GET my_rel_dest PARENT_PATH my_rel_dest)
+    #file(CMAKE_DIRECTORY ${my_rel_dest})
+    make_directory(${my_rel_dest})
     message(STATUS "Copying file ${my_formalize_rc} to ${CMAKE_CURRENT_BINARY_DIR}/resources/${my_rel_dest}")
     # For build
+    add_custom_target(create_build_dir ALL
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/resources/${my_rel_dest}"
+    )
     add_custom_command(TARGET ${_ARG_TARGET_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${my_formalize_rc}
