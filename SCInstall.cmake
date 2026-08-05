@@ -443,6 +443,7 @@ endfunction(sc_install_library)
 @param TARGET_NAME The name of the target executable to be created.
 @param MANIFESTS Manifests to be added to the target executable, e.g., "app.manifest"
 @param OPTIONS Options for the add_executable() command, e.g., "WIN32", "MACOSX_BUNDLE"
+@param APP_TYPE The type of the application, e.g., "DESKTOP" or "CONSOLE". This can be used to set platform-specific properties(like subsystem on Windows and invoke SideCMake packaging).
 @param TARGET_PROPERTIES Properties to set for the target executable.
 @param INTERFACE_SOURCES, PUBLIC_SOURCES, PRIVATE_SOURCES Source files for the target executable, categorized by visibility.  
 @param INTERFACE_DEPENDENCIES, PUBLIC_DEPENDENCIES, PRIVATE_DEPENDENCIES Dependencies for the target executable, categorized by visibility.
@@ -470,6 +471,7 @@ function(sc_install_executable)
     TARGET_NAME  # The target name, this is the name of the project to be created
     MANIFESTS # The manifests to be added to the target
     ICON  # The icon to be added to the target
+    APP_TYPE # The type of the application, e.g., "DESKTOP" or "CONSOLE". This can be used to set platform-specific properties(like subsystem on Windows and invoke SideCMake packaging).
   )
 
   set(_multiValueArgs 
@@ -567,53 +569,75 @@ function(sc_install_executable)
   )
   
   # Settings for packaging per platform
-  if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    if ("WIN32" IN_LIST _ARG_OPTIONS) #only if WIN32 option is set (e.g., for GUI applications)
-      include(${SIDECMAKE_DIR}/packaging/Windows.cmake)
-      sc_windows_install(
-        PROJECT_NAME ${_ARG_PROJECT_NAME}
-        TARGET_NAME ${_ARG_TARGET_NAME}
-        MANIFESTS ${_ARG_MANIFESTS}
-        SHARED_TARGETS ${_private_shared_targets}
-        FONTS ${_ARG_FONTS}
-        RESOURCES ${_ARG_RESOURCES}
-        ICON ${_ARG_ICON}
-        )
-    endif()  
-  elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-      include(${SIDECMAKE_DIR}/packaging/Linux.cmake)
-      sc_linux_install(
-        PROJECT_NAME ${_ARG_PROJECT_NAME}
-        TARGET_NAME ${_ARG_TARGET_NAME}
-        MANIFESTS ${_ARG_MANIFESTS}
-        SHARED_TARGETS ${_private_shared_targets}
-        FONTS ${_ARG_FONTS}
-        RESOURCES ${_ARG_RESOURCES}
-        ICON ${_ARG_ICON}
-        )
+  if (NOT _ARG_APP_TYPE)
+    set(_ARG_APP_TYPE "DESKTOP")
+  endif()
 
-  elseif (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    if ("MACOSX_BUNDLE" IN_LIST _ARG_OPTIONS)
-      include(${SIDECMAKE_DIR}/packaging/Darwin.cmake)
-      sc_darwin_install(
-        PROJECT_NAME ${_ARG_PROJECT_NAME}
-        TARGET_NAME ${_ARG_TARGET_NAME}
-        MANIFESTS ${_ARG_MANIFESTS}
-        SHARED_TARGETS ${_private_shared_targets}
-        FONTS ${_ARG_FONTS}
-        RESOURCES ${_ARG_RESOURCES}
-        ICON ${_ARG_ICON}
-        )
+  if (NOT _ARG_APP_TYPE STREQUAL "DESKTOP" AND NOT _ARG_APP_TYPE STREQUAL "CONSOLE")
+    message(FATAL_ERROR "APP_TYPE must be either DESKTOP or CONSOLE, current value is ${_ARG_APP_TYPE}")
+  endif()
+
+  string(TOUPPER "${_ARG_APP_TYPE}" _ARG_APP_TYPE)
+
+
+  if (_ARG_APP_TYPE STREQUAL "DESKTOP" )
+
+    if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+      if ("WIN32" IN_LIST _ARG_OPTIONS) #only if WIN32 option is set (e.g., for GUI applications)
+        include(${SIDECMAKE_DIR}/packaging/Windows.cmake)
+        sc_windows_install(
+          PROJECT_NAME ${_ARG_PROJECT_NAME}
+          TARGET_NAME ${_ARG_TARGET_NAME}
+          MANIFESTS ${_ARG_MANIFESTS}
+          SHARED_TARGETS ${_private_shared_targets}
+          FONTS ${_ARG_FONTS}
+          RESOURCES ${_ARG_RESOURCES}
+          ICON ${_ARG_ICON}
+          )
+      endif()  
+    elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        include(${SIDECMAKE_DIR}/packaging/Linux.cmake)
+        sc_linux_install(
+          PROJECT_NAME ${_ARG_PROJECT_NAME}
+          TARGET_NAME ${_ARG_TARGET_NAME}
+          MANIFESTS ${_ARG_MANIFESTS}
+          SHARED_TARGETS ${_private_shared_targets}
+          FONTS ${_ARG_FONTS}
+          RESOURCES ${_ARG_RESOURCES}
+          ICON ${_ARG_ICON}
+          )
+
+       elseif (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+      if ("MACOSX_BUNDLE" IN_LIST _ARG_OPTIONS)
+        include(${SIDECMAKE_DIR}/packaging/Darwin.cmake)
+        sc_darwin_install(
+          PROJECT_NAME ${_ARG_PROJECT_NAME}
+          TARGET_NAME ${_ARG_TARGET_NAME}
+          MANIFESTS ${_ARG_MANIFESTS}
+          SHARED_TARGETS ${_private_shared_targets}
+          FONTS ${_ARG_FONTS}
+          RESOURCES ${_ARG_RESOURCES}
+          ICON ${_ARG_ICON}
+          )
+      endif()
+    endif() #CMAKE_SYSTEM_NAME
+    # For Desktop applications, we can use the CMake install() command to install the executable and its dependencies.
+    install(TARGETS ${_ARG_TARGET_NAME}
+      BUNDLE DESTINATION "${CMAKE_INSTALL_PREFIX}/Applications"
+      RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT bin    
+    )
+  elseif (_ARG_APP_TYPE STREQUAL "CONSOLE")
+    if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+      set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /subsystem:console")
     endif()
-  endif ()
+    # For console applications, we don't need to do anything special for packaging.
+    # Just install the executable and its dependencies.
+    install(TARGETS ${_ARG_TARGET_NAME}
+      RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT bin
+    )
+  endif()  #_ARG_APP_TYPE
 
-  # *****************************************
-  # Install the generated executable files
-  # *****************************************
-  install(TARGETS ${_ARG_TARGET_NAME}
-    BUNDLE DESTINATION "${CMAKE_INSTALL_PREFIX}/Applications"
-    RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT bin    
-  )
+
 
   include("${SIDECMAKE_DIR}/SCUtilities.cmake")
   sc_internal_list_append(Z_SC_ALL_TARGETS ${_ARG_TARGET_NAME})
